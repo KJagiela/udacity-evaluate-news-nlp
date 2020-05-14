@@ -12,7 +12,14 @@ const textapi = new aylien({
     application_key: process.env.API_KEY
 });
 
-app.use(express.static('dist'));
+const bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+const cors = require('cors');
+app.use(cors());
+
+app.use(express.static(__dirname + '/dist'));
 
 
 app.get('/', function (req, res) {
@@ -25,6 +32,5 @@ app.listen(3000, function () {
 })
 
 app.get('/test', function (req, res) {
-    console.log('received request');
     res.send(mockAPIResponse)
 })

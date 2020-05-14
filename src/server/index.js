@@ -1,10 +1,19 @@
 const dotenv = require('dotenv');
 dotenv.config();
+
 const path = require('path');
 const express = require('express');
-const mockAPIResponse = require('./mockAPI.js');
-
 const app = express();
+const bodyParser = require('body-parser');
+const cors = require('cors');
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+app.use(cors());
+
+app.use(express.static(__dirname + '/dist'));
+
 const aylien = require('aylien_textapi');
 
 const textapi = new aylien({
@@ -12,14 +21,14 @@ const textapi = new aylien({
     application_key: process.env.API_KEY
 });
 
-const bodyParser = require('body-parser');
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+let polarity = null;
+let subjectivity = null;
 
-const cors = require('cors');
-app.use(cors());
+function analyzeText(postResponse, text='') {
 
-app.use(express.static(__dirname + '/dist'));
+}
+
+
 
 
 app.get('/', function (req, res) {
@@ -31,6 +40,30 @@ app.listen(3000, function () {
     console.log('Example app listening on port 3000!')
 })
 
-app.get('/test', function (req, res) {
-    res.send(mockAPIResponse)
+app.post('/analyze', function (req, res) {
+    const url = req.body.url;
+    textapi.extract({
+        url: url
+        }, (error, response) => {
+            if (error === null) {
+                textapi.sentiment({
+                    text: response.article,
+                    mode: 'document'
+                    }, (error, response) => {
+                        if (error === null) {
+                            res.send({
+                                polarity: response.polarity,
+                                subjectivity: response.subjectivity,
+                            });
+                        }
+                        else {
+                            console.log('error analyzing', error);
+                        }
+                    }
+                );
+            }
+            else {
+                console.log('error extracting', error);
+            }
+        });
 })
